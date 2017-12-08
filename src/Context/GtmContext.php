@@ -12,23 +12,12 @@ use Behat\Mink\Mink;
  */
 class GtmContext implements MinkAwareContext {
   /**
-   * Check the google tag manager noscript present in the page
+   * Check the google tag manager present in the page
    *
    * @Given google tag manager id is :arg1
    */
   public function googleTagManagerIdIs($id)
   {
-    $this->jsWaitForDocumentLoaded();
-
-    // script in head tag
-    try {
-      $script = '//www.googletagmanager.com/gtm.js?id=' . $id;
-      $this->assertSession()->responseContains($script);
-    } catch (Exception $e) {
-      throw new Exception('google tag manager script "www.googletagmanager.com/gtm.js?id=' . $id . '" not found in head tag');
-    }
-
-    // noscript
     $this->assertSession()->responseContains("www.googletagmanager.com/ns.html?id=$id");
   }
 
@@ -40,24 +29,12 @@ class GtmContext implements MinkAwareContext {
    * @Given google tag manager data layer setting :arg1 should be :arg2
    */
   public function googleTagManagerDataLayerSettingShouldBe($key, $value) {
-    $this->jsWaitForDocumentLoaded();
-
-    $script = <<<JS
-        return (function(){
-          for (var value in dataLayer) {
-            for (var key in dataLayer[value]) {
-              if("$key" == key && "$value" == dataLayer[value][key]) {
-                return 1;
-              }
-            }
-          }
-          return 0;
-        })();
-JS;
-
-    if (!$this->getSession()->evaluateScript($script)) {
-      throw new \Exception(sprintf("google tag manager data layer setting '%s':'%s' not found", $key, $value));
-    }
+    return $this->theResponseShouldMatch(sprintf(
+        '~dataLayer.*=.*%s\":\"%s\"~',
+        $key,
+        preg_quote($value)
+      )
+    );
   }
 
 }
