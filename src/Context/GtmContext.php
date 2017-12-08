@@ -11,6 +11,26 @@ use Behat\Mink\Mink;
  * @package DennisDigital\Behat\Gtm\Context
  */
 class GtmContext implements MinkAwareContext {
+
+  /**
+   * @var Mink
+   */
+  private $mink;
+
+  /**
+   * @inheritdoc
+   */
+  public function setMink(Mink $mink) {
+    $this->mink = $mink;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function setMinkParameters(array $parameters) {
+    // TODO: Implement setMinkParameters() method.
+  }
+
   /**
    * Check the google tag manager present in the page
    *
