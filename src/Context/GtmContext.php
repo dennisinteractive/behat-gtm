@@ -40,21 +40,68 @@ class GtmContext implements MinkAwareContext {
   {
     $this->assertSession()->responseContains("www.googletagmanager.com/ns.html?id=$id");
   }
-
   /**
    * Check google tag manager data layer contain key value pair
-   *
-   * Requires @javascript tag on the scenario.
    *
    * @Given google tag manager data layer setting :arg1 should be :arg2
    */
   public function googleTagManagerDataLayerSettingShouldBe($key, $value) {
-    return $this->theResponseShouldMatch(sprintf(
-        '~dataLayer.*=.*%s\":\"%s\"~',
-        $key,
-        preg_quote($value)
-      )
-    );
+    $propertyValue = $this->googleTagManagerGetDataLayerValue($key);
+    if ($value != $propertyValue) {
+      throw new \Exception($value . ' is not the same as ' . $propertyValue);
+    }
+  }
+  /**
+   * Check google tag manager data layer contain key value pair
+   *
+   * @Given google tag manager data layer setting :arg1 should match :arg2
+   */
+  public function googleTagManagerDataLayerSettingShouldMatch($key, $regex) {
+    $propertyValue = $this->googleTagManagerGetDataLayerValue($key);
+    if (!preg_match($regex, $propertyValue)) {
+      throw new \Exception($propertyValue . ' does not match ' . $regex);
+    }
+  }
+  /**
+   * Get Google Tag Manager Data Layer value
+   *
+   * @param $key
+   * @return mixed
+   * @throws \Exception
+   */
+  protected function googleTagManagerGetDataLayerValue($key) {
+    // Get the html
+    $html = $this->getSession()->getPage()->getContent();
+    // Get the dataLayer json and json_decode it
+    preg_match('~dataLayer\s*=\s*(.*?);</script>~' , $html, $match);
+    if (!isset($match[0])) {
+      throw new \Exception('dataLayer variable not found.');
+    }
+    $jsonArr = json_decode($match[1]);
+    // If it's not an array throw an exception
+    if (!is_array($jsonArr)) {
+      throw new \Exception('dataLayer variable is not an array.');
+    }
+    // Loop through the array and return the data layer value
+    foreach ($jsonArr as $jsonObj) {
+      if (isset($jsonObj->{$key})) {
+        return $jsonObj->{$key};
+      }
+    }
+    throw new \Exception($key . ' not found.');
+  }
+  /**
+   * Check dfp adslot is wrapped in google tag to make it async
+   *
+   * @Then :arg1 ad slot should be async
+   */
+  public function slotShouldBeAsync($slot_name) {
+    // Get slot definitions
+    $definitions = $this->getScriptsWithText($slot_name);
+    $found = $this->getAsyncSlot($definitions, $slot_name);
+    if (!$found) {
+      throw new \Exception(sprintf('adslot %s is not async', $slot_name));
+    }
   }
 
 }
