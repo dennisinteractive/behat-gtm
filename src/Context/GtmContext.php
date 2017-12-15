@@ -90,18 +90,5 @@ class GtmContext implements MinkAwareContext {
     }
     throw new \Exception($key . ' not found.');
   }
-  /**
-   * Check dfp adslot is wrapped in google tag to make it async
-   *
-   * @Then :arg1 ad slot should be async
-   */
-  public function slotShouldBeAsync($slot_name) {
-    // Get slot definitions
-    $definitions = $this->getScriptsWithText($slot_name);
-    $found = $this->getAsyncSlot($definitions, $slot_name);
-    if (!$found) {
-      throw new \Exception(sprintf('adslot %s is not async', $slot_name));
-    }
-  }
 
 }
