@@ -18,20 +18,6 @@ class GtmContext implements MinkAwareContext {
   private $mink;
 
   /**
-   * @inheritdoc
-   */
-  public function setMink(Mink $mink) {
-    $this->mink = $mink;
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function setMinkParameters(array $parameters) {
-    // TODO: Implement setMinkParameters() method.
-  }
-
-  /**
    * Check the google tag manager present in the page
    *
    * @Given google tag manager id is :arg1
@@ -91,4 +77,18 @@ class GtmContext implements MinkAwareContext {
     throw new \Exception($key . ' not found.');
   }
 
+
+  /**
+   * @inheritdoc
+   */
+  public function setMink(Mink $mink) {
+    $this->mink = $mink;
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public function setMinkParameters(array $parameters) {
+    // TODO: Implement setMinkParameters() method.
+  }
 }
