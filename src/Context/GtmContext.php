@@ -1,27 +1,69 @@
 <?php
 namespace DennisDigital\Behat\Gtm\Context;
 
+use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
+
+use DennisDigital\BDDCommonExtension\Context\RegisteredContexts;
+
+use Behat\Behat\Context\Context;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
-use Behat\Behat\Hook\Scope\AfterScenarioScope;
-use Behat\MinkExtension\Context\MinkAwareContext;
-use Behat\MinkExtension\Context\RawMinkContext;
-use Behat\Mink\Mink;
+
 
 /**
  * Class GtmContext
  * @package DennisDigital\Behat\Gtm\Context
  */
-class GtmContext implements MinkAwareContext {
-
-  /**
-   * @var Mink
-   */
-  private $mink;
+class GtmContext implements Context {
 
   /**
    * Drupal context.
    */
   private $drupalContext;
+
+  /**
+   * @BeforeSuite
+   */
+  public static function registerContextClasses(BeforeSuiteScope $scope) {
+    // Register the local contexts.
+    // This is the equivalent of putting them in behat.yml contexts:
+    $classes = RegisteredContexts::get();
+    foreach ($classes as $class) {
+      $scope->getEnvironment()->registerContextClass($class);
+    }
+  }
+
+  /**
+   * @BeforeScenario
+   *
+   * @param BeforeScenarioScope $scope
+   */
+  public function beforeScenario(BeforeScenarioScope $scope) {
+    // Get the environment.
+    $environment = $scope->getEnvironment();
+
+    // Get all the contexts we need.
+    $this->MinkContext = $environment->getContext('Drupal\DrupalExtension\Context\MinkContext');
+    $this->drupalContext = $environment->getContext('Drupal\DrupalExtension\Context\DrupalContext');
+
+    // Get all the registered contexts.
+    $classes = RegisteredContexts::get();
+    foreach ($classes as $name => $class) {
+      $this->contexts[$name] = $environment->getContext($class);
+    }
+
+    // Only error on these levels.
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
+
+  }
+
+  /**
+   * Wrapper for drupal extension.
+   *
+   * @return mixed
+   */
+  private function getSession() {
+    return $this->drupalContext->getSession();
+  }
 
   /**
    * Wrapper for drupal extension.
@@ -90,20 +132,5 @@ class GtmContext implements MinkAwareContext {
       }
     }
     throw new \Exception($key . ' not found.');
-  }
-
-
-  /**
-   * @inheritdoc
-   */
-  public function setMink(Mink $mink) {
-    $this->mink = $mink;
-  }
-
-  /**
-   * @inheritdoc
-   */
-  public function setMinkParameters(array $parameters) {
-    // TODO: Implement setMinkParameters() method.
   }
 }
