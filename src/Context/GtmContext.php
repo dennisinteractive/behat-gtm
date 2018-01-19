@@ -1,10 +1,7 @@
 <?php
 namespace DennisDigital\Behat\Gtm\Context;
 
-use Behat\Testwork\Hook\Scope\BeforeSuiteScope;
-
 use DennisDigital\BDDCommonExtension\Context\RegisteredContexts;
-
 use Behat\Behat\Context\Context;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 
@@ -21,18 +18,6 @@ class GtmContext implements Context {
   private $drupalContext;
 
   /**
-   * @BeforeSuite
-   */
-  public static function registerContextClasses(BeforeSuiteScope $scope) {
-    // Register the local contexts.
-    // This is the equivalent of putting them in behat.yml contexts:
-    $classes = RegisteredContexts::get();
-    foreach ($classes as $class) {
-      $scope->getEnvironment()->registerContextClass($class);
-    }
-  }
-
-  /**
    * @BeforeScenario
    *
    * @param BeforeScenarioScope $scope
@@ -42,7 +27,6 @@ class GtmContext implements Context {
     $environment = $scope->getEnvironment();
 
     // Get all the contexts we need.
-    $this->MinkContext = $environment->getContext('Drupal\DrupalExtension\Context\MinkContext');
     $this->drupalContext = $environment->getContext('Drupal\DrupalExtension\Context\DrupalContext');
 
     // Get all the registered contexts.
