@@ -4,6 +4,7 @@ namespace DennisDigital\Behat\Gtm\Context;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
 use Behat\Behat\Hook\Scope\AfterScenarioScope;
 use Behat\MinkExtension\Context\MinkAwareContext;
+use Behat\MinkExtension\Context\RawMinkContext;
 use Behat\Mink\Mink;
 
 /**
@@ -16,6 +17,20 @@ class GtmContext implements MinkAwareContext {
    * @var Mink
    */
   private $mink;
+
+  /**
+   * Drupal context.
+   */
+  private $drupalContext;
+
+  /**
+   * Wrapper for drupal extension.
+   *
+   * @return mixed
+   */
+  private function assertSession() {
+    return $this->drupalContext->assertSession();
+  }
 
   /**
    * Check the google tag manager present in the page
