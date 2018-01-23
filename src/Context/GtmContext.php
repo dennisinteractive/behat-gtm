@@ -1,61 +1,86 @@
 <?php
 namespace DennisDigital\Behat\Gtm\Context;
 
-use DennisDigital\BDDCommonExtension\Context\RegisteredContexts;
 use Behat\Behat\Context\Context;
-use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+
+use Behat\Mink\Mink;
+use Behat\Mink\WebAssert;
+use Behat\Mink\Session;
+use Behat\MinkExtension\Context\MinkAwareContext;
 
 
 /**
  * Class GtmContext
  * @package DennisDigital\Behat\Gtm\Context
  */
-class GtmContext implements Context {
+class GtmContext implements MinkAwareContext {
 
   /**
-   * Drupal context.
+   * @var Mink
    */
-  private $drupalContext;
+  private $mink;
+  private $minkParameters;
+
 
   /**
-   * @BeforeScenario
+   * Sets Mink instance.
    *
-   * @param BeforeScenarioScope $scope
+   * @param Mink $mink Mink session manager
    */
-  public function beforeScenario(BeforeScenarioScope $scope) {
-    // Get the environment.
-    $environment = $scope->getEnvironment();
+  public function setMink(Mink $mink)
+  {
+    $this->mink = $mink;
+  }
 
-    // Get all the contexts we need.
-    $this->drupalContext = $environment->getContext('Drupal\DrupalExtension\Context\DrupalContext');
+  /**
+   * Sets parameters provided for Mink.
+   *
+   * @param array $parameters
+   */
+  public function setMinkParameters(array $parameters)
+  {
+    $this->minkParameters = $parameters;
+  }
 
-    // Get all the registered contexts.
-    $classes = RegisteredContexts::get();
-    foreach ($classes as $name => $class) {
-      $this->contexts[$name] = $environment->getContext($class);
+  /**
+   * Returns Mink instance.
+   *
+   * @return Mink
+   */
+  public function getMink()
+  {
+    if (null === $this->mink) {
+      throw new \RuntimeException(
+        'Mink instance has not been set on Mink context class. ' .
+        'Have you enabled the Mink Extension?'
+      );
     }
 
-    // Only error on these levels.
-    error_reporting(E_ERROR | E_WARNING | E_PARSE);
-
+    return $this->mink;
   }
 
   /**
-   * Wrapper for drupal extension.
+   * Returns Mink session assertion tool.
    *
-   * @return mixed
+   * @param string|null $name name of the session OR active session will be used
+   *
+   * @return WebAssert
    */
-  private function getSession() {
-    return $this->drupalContext->getSession();
+  public function assertSession($name = null)
+  {
+    return $this->getMink()->assertSession($name);
   }
 
   /**
-   * Wrapper for drupal extension.
+   * Returns Mink session.
    *
-   * @return mixed
+   * @param string|null $name name of the session OR active session will be used
+   *
+   * @return Session
    */
-  private function assertSession() {
-    return $this->drupalContext->assertSession();
+  public function getSession($name = null)
+  {
+    return $this->getMink()->getSession($name);
   }
 
   /**
@@ -67,6 +92,7 @@ class GtmContext implements Context {
   {
     $this->assertSession()->responseContains("www.googletagmanager.com/ns.html?id=$id");
   }
+
   /**
    * Check google tag manager data layer contain key value pair
    *
@@ -78,6 +104,7 @@ class GtmContext implements Context {
       throw new \Exception($value . ' is not the same as ' . $propertyValue);
     }
   }
+
   /**
    * Check google tag manager data layer contain key value pair
    *
@@ -89,6 +116,7 @@ class GtmContext implements Context {
       throw new \Exception($propertyValue . ' does not match ' . $regex);
     }
   }
+
   /**
    * Get Google Tag Manager Data Layer value
    *
