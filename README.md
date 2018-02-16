@@ -1,5 +1,8 @@
-# behat-gtm
-GTM Behat Context
+# GTM Behat Context
+
+Provides step definitions to check GTM implementation on web pages
+
+Use `@javascript` to check using JS
 
 ## Provides the following step definitions
 
