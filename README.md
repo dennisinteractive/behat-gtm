@@ -1,7 +1,11 @@
-# behat-gtm
-GTM Behat Context
+# Behat GTM Context
+Provides steps to check GTM implementation
 
-## Provides the following step definitions
+```
+DennisDigital\Behat\Gtm\Context\GtmContext
+```
+
+## Step Definitions
 
 ```
 Given google tag manager id is :id
