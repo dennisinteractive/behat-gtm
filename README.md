@@ -4,6 +4,11 @@ Provides steps to check GTM implementation
 ```
 DennisDigital\Behat\Gtm\Context\GtmContext
 ```
+## Installation
+
+```
+composer require dennisdigital/behat-gtm
+```
 
 ## Step Definitions
 
