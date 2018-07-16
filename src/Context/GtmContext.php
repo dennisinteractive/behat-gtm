@@ -2,81 +2,13 @@
 namespace DennisDigital\Behat\Gtm\Context;
 
 use Behat\Mink\Driver\Selenium2Driver;
-use Behat\Mink\Mink;
-use Behat\Mink\WebAssert;
-use Behat\Mink\Session;
-use Behat\MinkExtension\Context\MinkAwareContext;
-
+use Behat\MinkExtension\Context\RawMinkContext;
 
 /**
  * Class GtmContext
  * @package DennisDigital\Behat\Gtm\Context
  */
-class GtmContext implements MinkAwareContext {
-
-  /**
-   * @var Mink
-   */
-  private $mink;
-  private $minkParameters;
-
-
-  /**
-   * Sets Mink instance.
-   *
-   * @param Mink $mink Mink session manager
-   */
-  public function setMink(Mink $mink) {
-    $this->mink = $mink;
-  }
-
-  /**
-   * Sets parameters provided for Mink.
-   *
-   * @param array $parameters
-   */
-  public function setMinkParameters(array $parameters) {
-    $this->minkParameters = $parameters;
-  }
-
-  /**
-   * Returns Mink instance.
-   *
-   * @return Mink
-   */
-  public function getMink() {
-    if (null === $this->mink) {
-      throw new \RuntimeException(
-        'Mink instance has not been set on Mink context class. ' .
-        'Have you enabled the Mink Extension?'
-      );
-    }
-
-    return $this->mink;
-  }
-
-  /**
-   * Returns Mink session assertion tool.
-   *
-   * @param string|null $name name of the session OR active session will be used
-   *
-   * @return WebAssert
-   */
-  public function assertSession($name = null) {
-    return $this->getMink()->assertSession($name);
-  }
-
-  /**
-   * Returns Mink session.
-   *
-   * @param string|null $name name of the session OR active session will be used
-   *
-   * @return Session
-   */
-  public function getSession($name = null) {
-    return $this->getMink()->getSession($name);
-  }
-
+class GtmContext extends RawMinkContext {
   /**
    * Check the google tag manager present in the page
    *
