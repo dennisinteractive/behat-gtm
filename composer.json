@@ -6,7 +6,8 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "behat/mink":   "~1.5"
+    "behat/mink":   "~1.5",
+    "behat/gherkin": "^4.5.1"
   },
   "autoload": {
     "psr-4": {"DennisDigital\\Behat\\Gtm\\": "src"}
