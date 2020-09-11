@@ -57,14 +57,14 @@ class GtmContext extends RawMinkContext {
    * @Given google tag manager data layer event :event should have the following values:
    *
    * Example:
+   * Wildcards * and ? allowed, and also multilevel arrays.
    * Given google tag manager data layer event "sign_event" should have the following values:
-   *  | eventAction        | eventCategory | eventLabel |
-   *  | behat_gtm_campaign | firma         | F_web      |
+   *  | eventAction        | eventCategory | eventLabel | ecommerce:purchase:actionField:revenue | ecommerce:purchase:actionField:id |
+   *  | behat_gtm_campaign | firma         | F_web      | 120                                    | ?_web_*                           |
    */
   public function dataLayerEventShouldHavePropertyValue($event, TableNode $values) {
     $hash = $values->getHash();
     $values_array = $hash[0];
-
     $event_array = $this->getDatalayerEvent($event);
     foreach ($values_array as $property => $value) {
       $this->checkDatalayerProperty($event_array, $property, $value);
@@ -78,23 +78,37 @@ class GtmContext extends RawMinkContext {
    *   Event array.
    * @param string $property
    *   Property datalayer.
-   * @param string $value
+   * @param string $expected_value
    *   Value datalayer.
    *
    * @throws \Exception
    */
-  public function checkDatalayerProperty(array $event_array, $property, $value) {
+  public function checkDatalayerProperty(array $event_array, $property, $expected_value) {
     if (!isset($event_array['event'])) {
       throw new \Exception('Event not found.');
     }
     $event_name = $event_array['event'];
 
-    if (!isset($event_array[$property])) {
-      throw new \Exception('Property ' . $property . ' not found on event ' . $event_name);
+    $value = $event_array;
+    $property_keys = explode(':', $property);
+    foreach ($property_keys as $key) {
+      if(!isset($value[$key])) {
+        throw new \Exception('Property ' . $property . ' not found on event ' . $event_name);
+      }
+      $value = $value[$key];
     }
-    if ($event_array[$property] != $value) {
-      throw new \Exception('Value ' . $value . ' not found on event ' . $event_name . ', value of property ' . $property . ' is' . $event_array[$property]);
+
+    if (!$this->wildcardMatch($expected_value, $value)) {
+      throw new \Exception('Value ' . $expected_value . ' not found on event ' . $event_name . ', value of property ' . $property . ' is' . $value);
     }
+  }
+
+  public function wildcardMatch($pattern, $subject) {
+    $pattern = strtr($pattern, [
+      '*' => '.*?', // 0 or more (lazy) - asterisk (*)
+      '?' => '.', // 1 character - question mark (?)
+    ]);
+    return preg_match("/$pattern/", $subject);
   }
 
   /**
@@ -117,7 +131,7 @@ class GtmContext extends RawMinkContext {
         return $json_item;
       }
     }
-    throw new \Exception('Event' . $event . ' not found.');
+    throw new \Exception('Event ' . $event . ' not found.');
   }
 
   /**
