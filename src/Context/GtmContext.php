@@ -99,7 +99,7 @@ class GtmContext extends RawMinkContext {
     }
 
     if (!$this->wildcardMatch($expected_value, $value)) {
-      throw new \Exception('Value ' . $expected_value . ' not found on event ' . $event_name . ', value of property ' . $property . ' is' . $value);
+      throw new \Exception('Value ' . $expected_value . ' not found on event ' . $event_name . ', value of property ' . $property . ' is ' . $value);
     }
   }
 
