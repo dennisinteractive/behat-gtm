@@ -35,7 +35,7 @@ class GtmContext extends RawMinkContext {
         $loop++;
         $this->getDataLayerValue($key);
         return true;
-      } catch ($e) {
+      } catch (\Exception $e) {
         // Ommit the exception until we finish the loop.
       }
       sleep(1);
