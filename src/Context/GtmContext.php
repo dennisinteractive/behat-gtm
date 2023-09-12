@@ -24,6 +24,27 @@ class GtmContext extends RawMinkContext {
   }
 
   /**
+   * Waits until the Datalayer object is updated and then checks if property is available.
+   *
+   * @Given I wait for the data layer setting :arg1
+   */
+  public function waitDataLayerSetting($key, $loops = 10) {
+    $loop = 0;
+    do {
+      try {
+        $loop++;
+        $this->getDataLayerValue($key);
+        return true;
+      } catch ($e) {
+        // Ommit the exception until we finish the loop.
+      }
+      sleep(1);
+    } while ($loop < $loops);
+
+    throw new \Exception("$key not found after waiting for $loops seconds.");
+  }
+
+  /**
    * Check google tag manager data layer contain key value pair
    *
    * @Given google tag manager data layer setting :arg1 should be :arg2
