@@ -6,7 +6,8 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "behat/mink":   "~1.5"
+    "behat/mink":   "~1.5",
+    "adbario/php-dot-notation": "^3.3"
   },
   "autoload": {
     "psr-4": {"DennisDigital\\Behat\\Gtm\\": "src"}
