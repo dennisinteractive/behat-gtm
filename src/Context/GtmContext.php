@@ -75,17 +75,47 @@ class GtmContext extends RawMinkContext {
    * @return mixed
    * @throws \Exception
    */
-  protected function getDataLayerValue($key) {
-    $json_arr = $this->getDataLayerJson();
-
-    // Loop through the array and return the data layer value
-    foreach ($json_arr as $json_item) {
-      if (isset($json_item[$key])) {
-        return $json_item[$key];
-      }
+    protected function getDataLayerValue($key)
+    {
+        $json_arr = $this->getDataLayerJson();
+        // Loop through the array and return the data layer value
+        foreach ($json_arr as $json_item) {
+            // Check if the key contains dot.
+            if (strpos($key, '.', 0) !== false) {
+                if (strpos($key, '[', 0) !== false) {
+                    $dot = dot($json_item);
+                    // Trim before [
+                    $pos = strpos($key, '[');
+                    if ($pos !== false) {
+                        $trimmedString = substr($key, 0, $pos);
+                    }
+                    $value = $dot->get($trimmedString);
+                    if ($value !== NULL) {
+                        // Filter the Numbers from String
+                        $int_var = (int)filter_var($key, FILTER_SANITIZE_NUMBER_INT);
+                        //Filter last variable from key
+                        $lastDotPosition = strrpos($key, ".");
+                        if ($lastDotPosition !== false) {
+                            $last_variable = substr($key, $lastDotPosition + 1);
+                            print_r(__LINE__, $last_variable);
+                        }
+                        $dot_array = dot($value[$int_var]);
+                        $value_array = $dot_array->get($last_variable);
+                        return $value_array;
+                    }
+                } else {
+                    $dot = dot($json_item);
+                    $value = $dot->get($key);
+                    if ($value !== NULL) {
+                        return $value;
+                    }
+                }
+            } elseif (isset($json_item[$key])) {
+                return $json_item[$key];
+            }
+        }
+        throw new \Exception($key . ' not found.');
     }
-    throw new \Exception($key . ' not found.');
-  }
 
   /**
    * Get dataLayer variable JSON.
