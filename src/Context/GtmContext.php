@@ -3,6 +3,7 @@ namespace DennisDigital\Behat\Gtm\Context;
 
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\MinkExtension\Context\RawMinkContext;
+use Adbar\Dot;
 
 /**
  * Class GtmContext
@@ -75,45 +76,57 @@ class GtmContext extends RawMinkContext {
    * @return mixed
    * @throws \Exception
    */
-    protected function getDataLayerValue($key) {
+    protected function getDataLayerValue($key)
+    {
         $json_arr = $this->getDataLayerJson();
         // Loop through the array and return the data layer value
         foreach ($json_arr as $json_item) {
             // Check if the key contains dot.
             if (strpos($key, '.', 0) !== false) {
-                if (strpos($key, '[', 0) !== false) {
-                    $dot = dot($json_item);
-                    // Trim before [
-                    $pos = strpos($key, '[');
-                    if ($pos !== false) {
-                        $trimmedString = substr($key, 0, $pos);
-                    }
-                    $value = $dot->get($trimmedString);
-                    if ($value !== NULL) {
-                        // Filter the Numbers from String
-                        $int_var = (int)filter_var($key, FILTER_SANITIZE_NUMBER_INT);
-                        //Filter last variable from key
-                        $lastDotPosition = strrpos($key, ".");
-                        if ($lastDotPosition !== false) {
-                            $last_variable = substr($key, $lastDotPosition + 1);
-                            print_r(__LINE__, $last_variable);
-                        }
-                        $dot_array = dot($value[$int_var]);
-                        $value_array = $dot_array->get($last_variable);
-                        return $value_array;
-                    }
-                } else {
-                    $dot = dot($json_item);
-                    $value = $dot->get($key);
-                    if ($value !== NULL) {
-                        return $value;
-                    }
+                $value = $this->getDotValue($json_item, $key);
+                if (!is_null($value)) {
+                    return $value;
                 }
             } elseif (isset($json_item[$key])) {
                 return $json_item[$key];
             }
         }
         throw new \Exception($key . ' not found.');
+    }
+
+    /**
+     * Convert dataLayer values to dot notation
+     */
+    private function getDotValue($arr, $key)
+    {
+        $dot = dot($arr);
+        // Check if the array contains dot.
+        if (strpos($key, '[', 0) !== false) {
+            // Trim before [
+            $pos = strpos($key, '[');
+            if ($pos !== false) {
+                $trimmedString = substr($key, 0, $pos);
+            }
+            $value = $dot->get($trimmedString);
+            if ($value !== NULL) {
+                // Filter the number from string.
+                $int_var = (int)filter_var($key, FILTER_SANITIZE_NUMBER_INT);
+                // Filter last variable from key.
+                $lastDotPosition = strrpos($key, ".");
+                if ($lastDotPosition !== false) {
+                    $last_variable = substr($key, $lastDotPosition + 1);
+                }
+                $dot_array = dot($value[$int_var]);
+                $value_array = $dot_array->get($last_variable);
+                return $value_array;
+            }
+        } else {
+            $dot = dot($arr);
+            $value = $dot->get($key);
+            if ($value !== NULL) {
+                return $value;
+            }
+        }
     }
 
   /**
