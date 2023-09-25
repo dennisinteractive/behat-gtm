@@ -79,10 +79,11 @@ class GtmContext extends RawMinkContext {
     protected function getDataLayerValue($key)
     {
         $json_arr = $this->getDataLayerJson();
-        // Loop through the array and return the data layer value
+        // Loop through the array and return the data layer value.
         foreach ($json_arr as $json_item) {
             // Check if the key contains dot.
             if (strpos($key, '.', 0) !== false) {
+                // Get value using dot notation.
                 $value = $this->getDotValue($json_item, $key);
                 if (!is_null($value)) {
                     return $value;
@@ -95,39 +96,49 @@ class GtmContext extends RawMinkContext {
     }
 
     /**
-     * Convert dataLayer values to dot notation
+     * Convert arrays :arg1 to dot notation :arg2
      */
-    private function getDotValue($arr, $key)
+    private function getDotValue($value, $key)
     {
-        $dot = dot($arr);
-        // Check if the array contains dot.
-        if (strpos($key, '[', 0) !== false) {
+        $dot = dot($value);
+        // Check if the key contains [.
+        // When the key contains [0] it means that we are trying to get the value from specific index in an array.
+        // i.e. foo.bar[0].foo.
+        $pos = strpos($key, '[',0);
+        if ($pos) {
             // Trim before [
-            $pos = strpos($key, '[');
-            if ($pos !== false) {
-                $trimmedString = substr($key, 0, $pos);
-            }
-            $value = $dot->get($trimmedString);
-            if ($value !== NULL) {
+            $keyBeforeArray = substr($key, 0, $pos);
+            $values = $dot->get($keyBeforeArray);
+            if (!empty($values)) {
                 // Filter the number from string.
-                $int_var = (int)filter_var($key, FILTER_SANITIZE_NUMBER_INT);
+                $int_var = $this->getNumberInsideKey($key);
                 // Filter last variable from key.
-                $lastDotPosition = strrpos($key, ".");
-                if ($lastDotPosition !== false) {
-                    $last_variable = substr($key, $lastDotPosition + 1);
+                $arrayIndexPosition = strrpos($key, "].");
+                if ($arrayIndexPosition) {
+                    $keyAfterArray = substr($key, $arrayIndexPosition + 2);
                 }
-                $dot_array = dot($value[$int_var]);
-                $value_array = $dot_array->get($last_variable);
-                return $value_array;
+                $dot_array = dot($values[$int_var]);
+                return $dot_array->get($keyAfterArray);
             }
         } else {
-            $dot = dot($arr);
-            $value = $dot->get($key);
-            if ($value !== NULL) {
-                return $value;
+            $dot = dot($value);
+            $valueNonArray = $dot->get($key);
+            if ($valueNonArray !== NULL) {
+                return $valueNonArray;
             }
         }
     }
+
+  /**
+   * Get number inside array index :arg2
+   */
+   protected function getNumberInsideKey($key) {
+       $pattern = '/\[(\d+)]/';
+       if (preg_match_all($pattern, $key, $matches)) {
+           return $matches[1][0];
+       }
+       throw new \Exception('Number not found between' . $key );
+   }
 
   /**
    * Get dataLayer variable JSON.
