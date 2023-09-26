@@ -76,63 +76,65 @@ class GtmContext extends RawMinkContext {
    * @return mixed
    * @throws \Exception
    */
-    protected function getDataLayerValue($key)
-    {
-        $json_arr = $this->getDataLayerJson();
-        // Loop through the array and return the data layer value.
-        foreach ($json_arr as $json_item) {
-            // Check if the key contains dot.
-            if (strpos($key, '.', 0) !== false) {
-                // Get value using dot notation.
-                $value = $this->getDotValue($json_item, $key);
-                if (!is_null($value)) {
-                    return $value;
-                }
-            } elseif (isset($json_item[$key])) {
-                return $json_item[$key];
-            }
-        }
-        throw new \Exception($key . ' not found.');
-    }
-
-    /**
-     * Convert arrays :arg1 to dot notation :arg2
-     */
-    private function getDotValue($value, $key)
-    {
-        $dot = dot($value);
-        // Check if the key contains [.
-        // When the key contains [0] it means that we are trying to get the value from specific index in an array.
-        // i.e. foo.bar[0].foo.
-        $pos = strpos($key, '[',0);
-        if ($pos) {
-            // Trim before [
-            $keyBeforeArray = substr($key, 0, $pos);
-            $values = $dot->get($keyBeforeArray);
-            if (!empty($values)) {
-                // Filter the number from string.
-                $int_var = $this->getNumberInsideKey($key);
-                // Filter last variable from key.
-                $arrayIndexPosition = strrpos($key, "].");
-                if ($arrayIndexPosition) {
-                    $keyAfterArray = substr($key, $arrayIndexPosition + 2);
-                }
-                $dot_array = dot($values[$int_var]);
-                return $dot_array->get($keyAfterArray);
-            }
-        } else {
-            $dot = dot($value);
-            $valueNonArray = $dot->get($key);
-            if ($valueNonArray !== NULL) {
-                return $valueNonArray;
-            }
-        }
-    }
+  protected function getDataLayerValue($key) {
+      $json_arr = $this->getDataLayerJson();
+      // Loop through the array and return the data layer value.
+      foreach ($json_arr as $json_item) {
+          // Check if the key contains dot.
+          if (strpos($key, '.', 0) !== false) {
+              // Get value using dot notation.
+              $value = $this->getDotValue($json_item, $key);
+              if (!is_null($value)) {
+                  return $value;
+              }
+          } elseif (isset($json_item[$key])) {
+              return $json_item[$key];
+          }
+      }
+      throw new \Exception($key . ' not found.');
+  }
 
   /**
-   * Get number inside array index :arg2
+   * Convert arrays to dot notation
+   * @param $value
+   * @param $key
+   * @return mixed|void
    */
-   protected function getNumberInsideKey($key) {
+  private function getDotValue($value, $key) {
+      $dot = dot($value);
+      // Check if the key contains [.
+      // When the key contains [0] it means that we are trying to get the value from specific index in an array.
+      // i.e. foo.bar[0].foo.
+      $pos = strpos($key, '[',0);
+      if ($pos) {
+          // Trim before [.
+          $keyBeforeArray = substr($key, 0, $pos);
+          $values = $dot->get($keyBeforeArray);
+          if (!empty($values)) {
+              // Filter the number from string.
+              $index = $this->getNumberFromString($key);
+              // Filter last variable from key.
+              $arrayIndexPosition = strrpos($key, "].");
+              if ($arrayIndexPosition) {
+                  $key = substr($key, $arrayIndexPosition + 2);
+              }
+              $value = dot($values[$index]);
+          }
+      }
+      $dot = dot($value);
+      $value = $dot->get($key);
+      if (!is_null($value)) {
+          return $value;
+      }
+  }
+
+  /**
+   * Get number inside array index
+   * @param $key
+   * @return string
+   * @throws \Exception
+   */
+   protected function getNumberFromString($key) {
        $pattern = '/\[(\d+)]/';
        if (preg_match_all($pattern, $key, $matches)) {
            return $matches[1][0];
