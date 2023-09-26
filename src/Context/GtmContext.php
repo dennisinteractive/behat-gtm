@@ -78,7 +78,8 @@ class GtmContext extends RawMinkContext {
    */
   protected function getDataLayerValue($key) {
     $json_arr = $this->getDataLayerJson();
-    // Loop through the array and return the data layer value.
+
+    // Loop through the array and return the data layer value
     foreach ($json_arr as $json_item) {
       // Check if the key contains dot.
       if (strpos($key, '.', 0) !== false) {
@@ -119,10 +120,10 @@ class GtmContext extends RawMinkContext {
         if ($arrayIndexPosition) {
           $key = substr($key, $arrayIndexPosition + 2);
         }
-        $value = dot($values[$index]);
+        $dot = dot($values[$index]);
       }
     }
-    $dot = dot($value);
+//    $dot = dot($value);
     return $dot->get($key);
   }
 
