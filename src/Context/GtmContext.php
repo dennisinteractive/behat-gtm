@@ -3,6 +3,7 @@ namespace DennisDigital\Behat\Gtm\Context;
 
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\MinkExtension\Context\RawMinkContext;
+use Adbar\Dot;
 
 /**
  * Class GtmContext
@@ -80,12 +81,65 @@ class GtmContext extends RawMinkContext {
 
     // Loop through the array and return the data layer value
     foreach ($json_arr as $json_item) {
-      if (isset($json_item[$key])) {
-        return $json_item[$key];
+      // Check if the key contains dot.
+      if (strpos($key, '.', 0) !== false) {
+        // Get value using dot notation.
+        $value = $this->getDotValue($json_item, $key);
+        if (!is_null($value)) {
+          return $value;
+        }
+      } elseif (isset($json_item[$key])) {
+          return $json_item[$key];
       }
     }
     throw new \Exception($key . ' not found.');
   }
+
+  /**
+   * Convert arrays to dot notation.
+   *
+   * @param $value
+   * @param $key
+   * @return mixed|null
+   */
+  private function getDotValue($value, $key) {
+    $dot = dot($value);
+    // Check if the key contains [.
+    // When the key contains [0] it means that we are trying to get the value from specific index in an array.
+    // i.e. foo.bar[0].foo.
+    $pos = strpos($key, '[',0);
+    if ($pos) {
+      // Trim before [.
+      $keyBeforeArray = substr($key, 0, $pos);
+      $values = $dot->get($keyBeforeArray);
+      if (!empty($values)) {
+        // Filter the number from string.
+        $index = $this->getNumberFromString($key);
+        // Filter last variable from key.
+        $arrayIndexPosition = strrpos($key, "].");
+        if ($arrayIndexPosition) {
+          $key = substr($key, $arrayIndexPosition + 2);
+        }
+        $dot = dot($values[$index]);
+      }
+    }
+    return $dot->get($key);
+  }
+
+  /**
+   * Get number inside array index.
+   *
+   * @param $key
+   * @return string
+   * @throws \Exception
+   */
+   protected function getNumberFromString($key) {
+     $pattern = '/\[(\d+)]/';
+     if (preg_match_all($pattern, $key, $matches)) {
+       return $matches[1][0];
+     }
+     throw new \Exception('Number not found in key ' . $key );
+   }
 
   /**
    * Get dataLayer variable JSON.
