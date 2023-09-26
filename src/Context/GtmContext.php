@@ -123,7 +123,6 @@ class GtmContext extends RawMinkContext {
         $dot = dot($values[$index]);
       }
     }
-//    $dot = dot($value);
     return $dot->get($key);
   }
 
