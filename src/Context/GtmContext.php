@@ -95,10 +95,11 @@ class GtmContext extends RawMinkContext {
   }
 
   /**
-   * Convert arrays to dot notation
+   * Convert arrays to dot notation.
+   *
    * @param $value
    * @param $key
-   * @return mixed|void
+   * @return mixed|null
    */
   private function getDotValue($value, $key) {
     $dot = dot($value);
@@ -122,14 +123,12 @@ class GtmContext extends RawMinkContext {
       }
     }
     $dot = dot($value);
-    $value = $dot->get($key);
-    if (!is_null($value)) {
-      return $value;
-    }
+    return $dot->get($key);
   }
 
   /**
-   * Get number inside array index
+   * Get number inside array index.
+   *
    * @param $key
    * @return string
    * @throws \Exception
@@ -139,7 +138,7 @@ class GtmContext extends RawMinkContext {
      if (preg_match_all($pattern, $key, $matches)) {
        return $matches[1][0];
      }
-     throw new \Exception('Number not found between' . $key );
+     throw new \Exception('Number not found in key ' . $key );
    }
 
   /**
