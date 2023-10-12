@@ -9,6 +9,14 @@ use Behat\MinkExtension\Context\RawMinkContext;
  * @package DennisDigital\Behat\Gtm\Context
  */
 class GtmContext extends RawMinkContext {
+
+  private $parameters;
+
+  public function __construct(array $parameters = [])
+  {
+    $this->parameters = $parameters;
+  }
+
   /**
    * Check the google tag manager present in the page
    *
@@ -21,6 +29,27 @@ class GtmContext extends RawMinkContext {
     else {
       $this->assertSession()->responseContains("www.googletagmanager.com/ns.html?id=$id");
     }
+  }
+
+  /**
+   * Waits until the Datalayer object is updated and then checks if property is available.
+   *
+   * @Given I wait for the data layer setting :arg1
+   */
+  public function waitDataLayerSetting($key, $loops = 10) {
+    $loop = 0;
+    do {
+      try {
+        $loop++;
+        $this->getDataLayerValue($key);
+        return true;
+      } catch (\Exception $e) {
+        // Ommit the exception until we finish the loop.
+      }
+      sleep(1);
+    } while ($loop < $loops);
+
+    throw new \Exception("$key not found after waiting for $loops seconds.");
   }
 
   /**
@@ -59,19 +88,86 @@ class GtmContext extends RawMinkContext {
 
     // Loop through the array and return the data layer value
     foreach ($json_arr as $json_item) {
-      if (isset($json_item[$key])) {
-        return $json_item[$key];
+      // Check if the key contains dot.
+      if (strpos($key, '.', 0) !== false) {
+        // Get value using dot notation.
+        $value = $this->getDotValue($json_item, $key);
+        if (!is_null($value)) {
+          return $value;
+        }
+      } elseif (isset($json_item[$key])) {
+          return $json_item[$key];
       }
     }
     throw new \Exception($key . ' not found.');
   }
 
   /**
+   * Convert arrays to dot notation.
+   *
+   * @param $value
+   * @param $key
+   * @return mixed|null
+   */
+  private function getDotValue($value, $key) {
+    $dot = dot($value);
+    // Check if the key contains [.
+    // When the key contains [0] it means that we are trying to get the value from specific index in an array.
+    // i.e. foo.bar[0].foo.
+    $pos = strpos($key, '[',0);
+    if ($pos) {
+      // Trim before [.
+      $keyBeforeArray = substr($key, 0, $pos);
+      $values = $dot->get($keyBeforeArray);
+      if (!empty($values)) {
+        // Filter the number from string.
+        $index = $this->getNumberFromString($key);
+        // Filter last variable from key.
+        $arrayIndexPosition = strrpos($key, "].");
+        if ($arrayIndexPosition) {
+          $key = substr($key, $arrayIndexPosition + 2);
+        }
+        $dot = dot($values[$index]);
+      }
+    }
+    return $dot->get($key);
+  }
+
+  /**
+   * Get number inside array index.
+   *
+   * @param $key
+   * @return string
+   * @throws \Exception
+   */
+   protected function getNumberFromString($key) {
+     $pattern = '/\[(\d+)]/';
+     if (preg_match_all($pattern, $key, $matches)) {
+       return $matches[1][0];
+     }
+     throw new \Exception('Number not found in key ' . $key );
+   }
+
+  /**
    * Get dataLayer variable JSON.
    */
   protected function getDataLayerJson() {
     if ($this->getSession()->getDriver() instanceof Selenium2Driver) {
-      $json_arr = $this->getSession()->getDriver()->evaluateScript('return dataLayer;');
+      $ignore_items = isset($this->parameters['ignoreGtmItems']) ? $this->parameters['ignoreGtmItems'] : [];
+      if (empty($ignore_items)) {
+        // Return dataLayer array as is.
+        $script = 'return dataLayer';
+      }
+      else {
+        // Remove items to be ignored before returning the array.
+        $script = 'return dataLayer.map(i => { ';
+        foreach ($ignore_items as $i => $key) {
+          $script .= "delete(i['$key']);";
+        }
+        $script .= ' return i; });';
+      }
+      var_dump($script);
+      $json_arr = $this->getSession()->getDriver()->evaluateScript($script);
     }
     else {
       $json_arr = json_decode($this->getDataLayerJsonFromSource(), TRUE);
