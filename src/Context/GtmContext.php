@@ -3,13 +3,20 @@ namespace DennisDigital\Behat\Gtm\Context;
 
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\MinkExtension\Context\RawMinkContext;
-use Adbar\Dot;
 
 /**
  * Class GtmContext
  * @package DennisDigital\Behat\Gtm\Context
  */
 class GtmContext extends RawMinkContext {
+
+  private $parameters;
+
+  public function __construct(array $parameters = [])
+  {
+    $this->parameters = $parameters;
+  }
+
   /**
    * Check the google tag manager present in the page
    *
@@ -146,7 +153,21 @@ class GtmContext extends RawMinkContext {
    */
   protected function getDataLayerJson() {
     if ($this->getSession()->getDriver() instanceof Selenium2Driver) {
-      $json_arr = $this->getSession()->getDriver()->evaluateScript('return dataLayer;');
+      $ignore_items = isset($this->parameters['ignoreGtmItems']) ? $this->parameters['ignoreGtmItems'] : [];
+      if (empty($ignore_items)) {
+        // Return dataLayer array as is.
+        $script = 'return dataLayer';
+      }
+      else {
+        // Remove items to be ignored before returning the array.
+        $script = 'return dataLayer.map(i => { ';
+        foreach ($ignore_items as $i => $key) {
+          $script .= "delete(i['$key']);";
+        }
+        $script .= ' return i; });';
+      }
+      var_dump($script);
+      $json_arr = $this->getSession()->getDriver()->evaluateScript($script);
     }
     else {
       $json_arr = json_decode($this->getDataLayerJsonFromSource(), TRUE);

@@ -2,14 +2,22 @@
 
 Provides step definitions to check GTM implementation on web pages
 
-```
-DennisDigital\Behat\Gtm\Context\GtmContext
-```
-
 ## Installation
 
 ```
 composer require dennisdigital/behat-gtm
+```
+
+### Configuration
+Setup extension by specifying your behat.yml:
+
+Example on how to add extension and configure items to be ignored.
+```yaml
+default:
+  extensions:
+    DennisDigital\Behat\Gtm\Context\GtmContext:
+      ignoreGtmItems:
+        - gtm.element
 ```
 
 ## Step Definitions
